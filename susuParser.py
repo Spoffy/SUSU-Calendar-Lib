@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 
 HTML_PARSER = "html.parser"
 CALENDAR_REQUEST_URL = "https://www.susu.org/php/ajax-calendar.php"
@@ -28,10 +28,12 @@ def datetimeToRequestFormat(valueToConvert):
     #Magic constants are... magic. This is simply the right format, sorry.
     return valueToConvert.isoformat()[0:19].replace("T"," ")
 
-def requestCalendarForDay(date):
+def requestCalForDay(date):
     formattedDate = datetimeToRequestFormat(date)
     requestParams = {"date": formattedDate, "list": "true", "week": "false"}
-    return requests.get(CALENDAR_REQUEST_URL, requestParams)
+    request = requests.get(CALENDAR_REQUEST_URL, requestParams)
+    request.raise_for_status()
+    return request.text.encode('ascii', 'ignore')
 
 def parseEventListFromHtml(html):
     soup = BeautifulSoup(html, HTML_PARSER)
@@ -59,6 +61,18 @@ def parseEventListFromHtml(html):
 
     return eventList
 
+def getEventsOnDay(date):
+    return parseEventListFromHtml(requestCalForDay(date))
+
+def dateperiod(startDate, days):
+    for dayNumber in range(days-1):
+        yield startDate + timedelta(dayNumber)
     
-for event in parseEventListFromHtml(requestCalendarForDay(currentDay).text):
-    event.prettyPrint()
+def getEventsInDatePeriod(startDate, days):
+    events = list()
+    for day in dateperiod(startDate, days):
+        events.extend(getEventsOnDay(day))
+    return events
+    
+#for event in getEventsInDatePeriod(currentDay, 10):
+#    event.prettyPrint()
