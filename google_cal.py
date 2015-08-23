@@ -63,11 +63,11 @@ def to_google_format(event):
         'location': str(event.location),
         'description': str(event.desc),
         'start': {
-            'dateTime': event.startDate.isoformat(),
+            'dateTime': event.start_date.isoformat(),
             'timeZone': CURRENT_TIME_ZONE
         },
         'end': {
-            'dateTime': event.endDate.isoformat(),
+            'dateTime': event.end_date.isoformat(),
             'timeZone': CURRENT_TIME_ZONE
         }
     }
@@ -95,7 +95,7 @@ def main():
     10 events on the user's calendar.
     """
     service = get_calendar_service()
-    for event in susu.getEventsInDatePeriod(susu.currentDay, 60):
+    for event in susu.get_events_in_date_period(datetime.today(), 60):
         print("Adding event: ", event.name)
         insert_event(service, event)
 

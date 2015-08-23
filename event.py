@@ -3,16 +3,16 @@ class Event:
         self.name = "Default Name"
         self.host = "No host found"
         self.desc = "No description found"
-        self.startDate = None
-        self.endDate = None
+        self.start_date = None
+        self.end_date = None
         self.location = "No location found"
 
-    def prettyPrint(self):
+    def pretty_print(self):
         print("Name: ", str(self.name))
         print("Host: ", str(self.host))
         print("Desc: ", str(self.desc))
-        print("Start Date: ", str(self.startDate))
-        print("End Date: ", str(self.endDate))
+        print("Start Date: ", str(self.start_date))
+        print("End Date: ", str(self.end_date))
         print("Location: ", str(self.location))
 
 
