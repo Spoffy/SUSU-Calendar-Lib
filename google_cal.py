@@ -7,8 +7,10 @@ from oauth2client import client
 from oauth2client import tools
 
 import susu_parser as susu
+from event import Event
 from datetime import datetime
 from dateutil.tz import tzutc
+import dateutil.parser
 
 try:
     import argparse
@@ -67,8 +69,25 @@ def to_google_format(event):
         },
         'end': {
             'dateTime': event.end_date.isoformat(),
+        },
+        'extendedProperties': {
+            'shared': {
+                'host': str(event.host)
+            }
         }
     }
+
+def google_format_to_event(src_event):
+    event = Event()
+    event.name = src_event.get('summary', '')
+    event.location = src_event.get('location', '')
+    event.desc = src_event.get('description', '')
+    event.start_date = dateutil.parser.parse(src_event['start']['dateTime'])
+    event.end_date = dateutil.parser.parse(src_event['end']['dateTime'])
+    event.host = src_event.get('extendedProperties', {}).get('shared', {}).get('host', '')
+    return event
+
+
 
 
 def insert_event(service, event):
@@ -78,8 +97,6 @@ def insert_event(service, event):
     print('Event created: %s' % (event.get('htmlLink')))
 
 G_API_MAX_RESULTS = 2500
-
-
 def list_events(service, startDate):
     response = service.events().list(
         calendarId=CALENDAR_ID,
@@ -97,7 +114,7 @@ def main():
     service = get_calendar_service()
     events = list_events(service, datetime.now(tzutc()))
     for event in events:
-        print(event)
+        google_format_to_event(event).pretty_print()
 
 
 if __name__ == '__main__':
