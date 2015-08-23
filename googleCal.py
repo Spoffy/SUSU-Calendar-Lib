@@ -5,6 +5,7 @@ from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
+import susuParser as susu
 
 import datetime
 
@@ -17,6 +18,7 @@ except ImportError:
 SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Calendar Event Pusher'
+CURRENT_TIME_ZONE = 'Europe/London'
 
 
 def get_credentials():
@@ -47,28 +49,41 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
+def get_calendar_service():
+    credentials = get_credentials()
+    http = credentials.authorize(httplib2.Http())
+    return discovery.build('calendar', 'v3', http=http)
+
+def to_google_format(event):
+    return {
+        'summary': str(event.name),
+        'location': str(event.location),
+        'description': str(event.desc),
+        'start': {
+            'dateTime': event.startDate.isoformat(),
+            'timeZone': CURRENT_TIME_ZONE
+        },
+        'end': {
+            'dateTime': event.endDate.isoformat(),
+            'timeZone': CURRENT_TIME_ZONE
+        }
+    }
+
+def insert_event(service, event):
+    event = service.events().insert(calendarId='gofflsctss3evrv2valc138nl0@group.calendar.google.com', body=to_google_format(event)).execute()
+    print('Event created: %s' % (event.get('htmlLink')))
+
+
 def main():
     """Shows basic usage of the Google Calendar API.
 
     Creates a Google Calendar API service object and outputs a list of the next
     10 events on the user's calendar.
     """
-    credentials = get_credentials()
-    http = credentials.authorize(httplib2.Http())
-    service = discovery.build('calendar', 'v3', http=http)
-
-    now = datetime.datetime.utcnow().isoformat() + 'Z' # 'Z' indicates UTC time
-    print('Getting the upcoming 10 events')
-    eventsResult = service.events().list(
-        calendarId='primary', timeMin=now, maxResults=10, singleEvents=True,
-        orderBy='startTime').execute()
-    events = eventsResult.get('items', [])
-
-    if not events:
-        print('No upcoming events found.')
-    for event in events:
-        start = event['start'].get('dateTime', event['start'].get('date'))
-        print(start, event['summary'])
+    service = get_calendar_service()
+    for event in susu.getEventsInDatePeriod(susu.currentDay, 60):
+        print("Adding event: ", event.name)
+        insert_event(service, event)
 
 
 if __name__ == '__main__':
