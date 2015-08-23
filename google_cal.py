@@ -128,7 +128,7 @@ def mk_req_list_events(service, startDate):
 
 def list_events(service, startDate):
     response = mk_req_list_events(service, startDate).execute()
-    return response.get('items', [])
+    return [google_format_to_event(event) for event in response.get('items', [])]
 
 def mk_req_delete_event(service, eventId):
     return service.events().delete(calendarId=CALENDAR_ID,eventId=eventId)
@@ -146,8 +146,11 @@ def main():
     10 events on the user's calendar.
     """
     service = get_calendar_service()
-    events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
-    insert_event_list(service, events)
+    #events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
+    #insert_event_list(service, events)
+    events = list_events(service, datetime.now(tzutc()))
+    for event in events:
+        event.pretty_print()
 
 if __name__ == '__main__':
     main()
