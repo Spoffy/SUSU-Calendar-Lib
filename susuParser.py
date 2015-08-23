@@ -35,6 +35,10 @@ def requestCalForDay(date):
     request.raise_for_status()
     return request.text.encode('ascii', 'ignore')
 
+def datetimeStringToObj(dtString):
+    if not dtString: return None
+    return datetime.strptime(dtString, "%Y-%m-%dT%H:%M:%S")
+
 def parseEventListFromHtml(html):
     soup = BeautifulSoup(html, HTML_PARSER)
     eventListDivs = soup.select("#list")[0].find_all('div', recursive=False)
@@ -54,8 +58,8 @@ def parseEventListFromHtml(html):
         event.name = nameTag.string
         event.host = hostTag.string
         event.desc = descTag.string
-        event.startDate = startDateTag['datetime']
-        event.endDate = endDateTag['datetime']
+        event.startDate = datetimeStringToObj(startDateTag['datetime'][0:19])
+        event.endDate = datetimeStringToObj(endDateTag['datetime'][0:19])
         event.location = locationTag.string
         eventList.append(event)
 
