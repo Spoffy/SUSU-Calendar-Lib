@@ -1,6 +1,7 @@
 import httplib2
 import os
 import math
+import logging
 
 from apiclient import discovery
 from apiclient.http import BatchHttpRequest
@@ -110,10 +111,12 @@ def mk_req_insert_event(service, event):
         body=to_google_format(event))
 
 def insert_event(service, event):
+    logging.info("Inserting {0} into calendar.", event.name)
     response = mk_req_insert_event(service, event).execute()
     print('Event created: %s' % (response.get('htmlLink')))
 
 def insert_event_list(service, events):
+    logging.info("Inserting {0} events into calendar.", len(events))
     requests = list()
     for event in events:
         requests.append(mk_req_insert_event(service, event))
@@ -138,6 +141,8 @@ def mk_req_delete_event(service, eventId):
     return service.events().delete(calendarId=CALENDAR_ID,eventId=eventId)
 
 def delete_all(service):
+    today = datetime.now(tzutc())
+    logging.info("Deleting all calendar items after %s", str(today))
     requests = list()
     events = list_events_raw(service, datetime.now(tzutc()))
     for event in events:
@@ -150,10 +155,11 @@ def main():
     Creates a Google Calendar API service object and outputs a list of the next
     10 events on the user's calendar.
     """
+    logging.basicConfig(level="INFO")
     service = get_calendar_service()
     delete_all(service)
-    #events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
-    #insert_event_list(service, events)
+    events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
+    insert_event_list(service, events)
     #events = list_events(service, datetime.now(tzutc()))
     #for event in events:
     #    event.pretty_print()
