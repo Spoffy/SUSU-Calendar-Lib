@@ -7,6 +7,8 @@ from event import Event
 
 HTML_PARSER = "html.parser"
 CALENDAR_REQUEST_URL = "https://www.susu.org/php/ajax-calendar.php"
+#The number of characters in the host's name starts in the HTML
+HOST_NAME_START = 13
 
 
 def datetime_to_request_format(value_to_convert):
@@ -49,7 +51,7 @@ def parse_event_list_from_html(html):
 
         event = Event()
         event.name = name_tag.string
-        event.host = host_tag.string
+        event.host = host_tag.string[HOST_NAME_START:]
         event.desc = desc_tag.string
         event.start_date = datetime_string_to_obj(
             start_date_tag['datetime'])
