@@ -116,7 +116,7 @@ def insert_event(service, event):
     print('Event created: %s' % (response.get('htmlLink')))
 
 def insert_event_list(service, events):
-    logging.info("Inserting {0} events into calendar.", len(events))
+    logging.info("Inserting {0:d} events into calendar.", len(events))
     requests = list()
     for event in events:
         requests.append(mk_req_insert_event(service, event))
