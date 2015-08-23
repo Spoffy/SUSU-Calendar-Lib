@@ -18,7 +18,6 @@ except ImportError:
 SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Calendar Event Pusher'
-CURRENT_TIME_ZONE = 'Europe/London'
 CALENDAR_ID = 'gofflsctss3evrv2valc138nl0@group.calendar.google.com'
 
 
@@ -64,11 +63,9 @@ def to_google_format(event):
         'description': str(event.desc),
         'start': {
             'dateTime': event.start_date.isoformat(),
-            'timeZone': CURRENT_TIME_ZONE
         },
         'end': {
             'dateTime': event.end_date.isoformat(),
-            'timeZone': CURRENT_TIME_ZONE
         }
     }
 

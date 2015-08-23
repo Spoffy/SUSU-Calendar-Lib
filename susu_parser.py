@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from datetime import datetime, timedelta
 import dateutil.parser
+from dateutil.tz import tzutc
 from event import Event
 
 HTML_PARSER = "html.parser"
@@ -24,7 +25,10 @@ def request_cal_for_day(date):
 def datetime_string_to_obj(dt_string):
     if not dt_string:
         return None
-    return dateutil.parser.parse(dt_string)
+    new_datetime = dateutil.parser.parse(dt_string)
+    if not new_datetime.tzinfo:
+        return new_datetime.replace(tzinfo=tzutc())
+    return new_datetime
 
 
 def parse_event_list_from_html(html):
@@ -70,9 +74,3 @@ def get_events_in_date_period(start_date, days):
     for day in dateperiod(start_date, days):
         events.extend(get_events_on_day(day))
     return events
-
-# for event in get_events_in_date_period(current_day, 10):
-#    event.pretty_print()
-
-for event in get_events_in_date_period(datetime.today(), 10):
-    event.pretty_print()
