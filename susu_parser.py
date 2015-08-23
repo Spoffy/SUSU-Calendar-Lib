@@ -1,8 +1,12 @@
-import requests
-from bs4 import BeautifulSoup
+import logging
+
 from datetime import datetime, timedelta
 import dateutil.parser
 from dateutil.tz import tzutc
+
+import requests
+from bs4 import BeautifulSoup
+
 from event import Event
 
 HTML_PARSER = "html.parser"
@@ -17,6 +21,7 @@ def datetime_to_request_format(value_to_convert):
 
 
 def request_cal_for_day(date):
+    logging.info("Retrieving calendar for %s", str(date))
     formatted_date = datetime_to_request_format(date)
     request_params = {"date": formatted_date, "list": "true", "week": "false"}
     request = requests.get(CALENDAR_REQUEST_URL, request_params)
