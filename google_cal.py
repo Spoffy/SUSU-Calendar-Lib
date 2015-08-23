@@ -6,8 +6,9 @@ import oauth2client
 from oauth2client import client
 from oauth2client import tools
 
-import susuParser as susu
-import datetime
+import susu_parser as susu
+from datetime import datetime
+from dateutil.tz import tzutc
 
 try:
     import argparse
@@ -80,9 +81,11 @@ G_API_MAX_RESULTS = 2500
 
 
 def list_events(service, startDate):
-    response = service.events.list(
+    response = service.events().list(
         calendarId=CALENDAR_ID,
-        maxResults=G_API_MAX_RESULTS)
+        maxResults=G_API_MAX_RESULTS,
+        timeMin=startDate.isoformat()).execute()
+    return response.get('items', [])
 
 
 def main():
@@ -92,9 +95,9 @@ def main():
     10 events on the user's calendar.
     """
     service = get_calendar_service()
-    for event in susu.get_events_in_date_period(datetime.today(), 60):
-        print("Adding event: ", event.name)
-        insert_event(service, event)
+    events = list_events(service, datetime.now(tzutc()))
+    for event in events:
+        print(event)
 
 
 if __name__ == '__main__':
