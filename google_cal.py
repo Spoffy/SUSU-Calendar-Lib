@@ -126,15 +126,20 @@ def mk_req_list_events(service, startDate):
         maxResults=G_API_MAX_RESULTS,
         timeMin=startDate.isoformat())
 
-def list_events(service, startDate):
+def list_events_raw(service, startDate):
     response = mk_req_list_events(service, startDate).execute()
-    return [google_format_to_event(event) for event in response.get('items', [])]
+    return response.get('items', [])
+
+def list_events(service, start_date):
+    return [google_format_to_event(event) for event 
+            in list_events_raw(service, start_date)]
 
 def mk_req_delete_event(service, eventId):
     return service.events().delete(calendarId=CALENDAR_ID,eventId=eventId)
 
 def delete_all(service):
     requests = list()
+    events = list_events_raw(service, datetime.now(tzutc()))
     for event in events:
         requests.append(mk_req_delete_event(service, event['id']))
     send_multiple_requests(requests)
@@ -146,11 +151,12 @@ def main():
     10 events on the user's calendar.
     """
     service = get_calendar_service()
+    delete_all(service)
     #events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
     #insert_event_list(service, events)
-    events = list_events(service, datetime.now(tzutc()))
-    for event in events:
-        event.pretty_print()
+    #events = list_events(service, datetime.now(tzutc()))
+    #for event in events:
+    #    event.pretty_print()
 
 if __name__ == '__main__':
     main()
