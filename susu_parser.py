@@ -48,8 +48,8 @@ def parse_event_list_from_html(html):
         event.host = host_tag.string
         event.desc = desc_tag.string
         event.start_date = datetime_string_to_obj(
-            start_date_tag['datetime'][0:19])
-        event.end_date = datetime_string_to_obj(end_date_tag['datetime'][0:19])
+            start_date_tag['datetime'])
+        event.end_date = datetime_string_to_obj(end_date_tag['datetime'])
         event.location = location_tag.string
         event_list.append(event)
 
