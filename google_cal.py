@@ -1,16 +1,19 @@
 import httplib2
 import os
+import math
 
 from apiclient import discovery
+from apiclient.http import BatchHttpRequest
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
 
-import susu_parser as susu
-from event import Event
 from datetime import datetime
 from dateutil.tz import tzutc
 import dateutil.parser
+
+import susu_parser as susu
+from event import Event
 
 try:
     import argparse
@@ -87,23 +90,54 @@ def google_format_to_event(src_event):
     event.host = src_event.get('extendedProperties', {}).get('shared', {}).get('host', '')
     return event
 
+MAX_BATCH_SIZE = 50
+def send_multiple_requests(requests):
+    request_queue = list(requests)
+    current_batch = BatchHttpRequest()
+    current_batch_size = 0
+    while len(request_queue):
+        current_batch.add(request_queue.pop(0))
+        current_batch_size += 1
+        if current_batch_size >= MAX_BATCH_SIZE:
+            current_batch.execute()
+            current_batch = BatchHttpRequest()
+            current_batch_size = 0
 
 
+def mk_req_insert_event(service, event):
+    return service.events().insert(
+        calendarId=CALENDAR_ID,
+        body=to_google_format(event))
 
 def insert_event(service, event):
-    event = service.events().insert(
-        calendarId=CALENDAR_ID,
-        body=to_google_format(event)).execute()
-    print('Event created: %s' % (event.get('htmlLink')))
+    response = mk_req_insert_event(service, event).execute()
+    print('Event created: %s' % (response.get('htmlLink')))
+
+def insert_event_list(service, events):
+    requests = list()
+    for event in events:
+        requests.append(mk_req_insert_event(service, event))
+    send_multiple_requests(requests)
 
 G_API_MAX_RESULTS = 2500
-def list_events(service, startDate):
-    response = service.events().list(
+def mk_req_list_events(service, startDate):
+    return service.events().list(
         calendarId=CALENDAR_ID,
         maxResults=G_API_MAX_RESULTS,
-        timeMin=startDate.isoformat()).execute()
+        timeMin=startDate.isoformat())
+
+def list_events(service, startDate):
+    response = mk_req_list_events(service, startDate).execute()
     return response.get('items', [])
 
+def mk_req_delete_event(service, eventId):
+    return service.events().delete(calendarId=CALENDAR_ID,eventId=eventId)
+
+def delete_all(service):
+    requests = list()
+    for event in events:
+        requests.append(mk_req_delete_event(service, event['id']))
+    send_multiple_requests(requests)
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -112,10 +146,8 @@ def main():
     10 events on the user's calendar.
     """
     service = get_calendar_service()
-    events = list_events(service, datetime.now(tzutc()))
-    for event in events:
-        google_format_to_event(event).pretty_print()
-
+    events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
+    insert_event_list(service, events)
 
 if __name__ == '__main__':
     main()
