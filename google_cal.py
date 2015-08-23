@@ -5,8 +5,8 @@ from apiclient import discovery
 import oauth2client
 from oauth2client import client
 from oauth2client import tools
-import susuParser as susu
 
+import susuParser as susu
 import datetime
 
 try:
@@ -19,6 +19,7 @@ SCOPES = 'https://www.googleapis.com/auth/calendar'
 CLIENT_SECRET_FILE = 'client_secret.json'
 APPLICATION_NAME = 'Calendar Event Pusher'
 CURRENT_TIME_ZONE = 'Europe/London'
+CALENDAR_ID = 'gofflsctss3evrv2valc138nl0@group.calendar.google.com'
 
 
 def get_credentials():
@@ -44,15 +45,17 @@ def get_credentials():
         flow.user_agent = APPLICATION_NAME
         if flags:
             credentials = tools.run_flow(flow, store, flags)
-        else: # Needed only for compatability with Python 2.6
+        else:  # Needed only for compatability with Python 2.6
             credentials = tools.run(flow, store)
         print('Storing credentials to ' + credential_path)
     return credentials
+
 
 def get_calendar_service():
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     return discovery.build('calendar', 'v3', http=http)
+
 
 def to_google_format(event):
     return {
@@ -69,9 +72,20 @@ def to_google_format(event):
         }
     }
 
+
 def insert_event(service, event):
-    event = service.events().insert(calendarId='gofflsctss3evrv2valc138nl0@group.calendar.google.com', body=to_google_format(event)).execute()
+    event = service.events().insert(
+        calendarId=CALENDAR_ID,
+        body=to_google_format(event)).execute()
     print('Event created: %s' % (event.get('htmlLink')))
+
+G_API_MAX_RESULTS = 2500
+
+
+def list_events(service, startDate):
+    response = service.events.list(
+        calendarId=CALENDAR_ID,
+        maxResults=G_API_MAX_RESULTS)
 
 
 def main():
@@ -88,4 +102,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
