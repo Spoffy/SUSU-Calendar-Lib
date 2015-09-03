@@ -113,12 +113,12 @@ def mk_req_insert_event(service, event):
         body=to_google_format(event))
 
 def insert_event(service, event):
-    logging.info("Inserting {0} into calendar.", event.name)
+    logging.info("Inserting {0} into calendar.".format(event.name))
     response = mk_req_insert_event(service, event).execute()
     print('Event created: %s' % (response.get('htmlLink')))
 
 def insert_event_list(service, events):
-    logging.info("Inserting {0:d} events into calendar.", len(events))
+    logging.info("Inserting {0:d} events into calendar.".format(len(events)))
     requests = list()
     for event in events:
         requests.append(mk_req_insert_event(service, event))
