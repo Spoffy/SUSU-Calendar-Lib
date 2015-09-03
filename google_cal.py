@@ -167,8 +167,9 @@ def main():
     """
     logging.basicConfig(level="INFO")
     service = get_calendar_service()
-    events = list_events(service, datetime.now(tzutc()))
     delete_all(service)
+    events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
+    insert_event_list(service, events)
 
 if __name__ == '__main__':
     main()
