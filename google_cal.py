@@ -122,16 +122,24 @@ def insert_event_list(service, events):
         requests.append(mk_req_insert_event(service, event))
     send_multiple_requests(requests)
 
-G_API_MAX_RESULTS = 2500
-def mk_req_list_events(service, startDate):
+G_API_MAX_RESULTS = 1000
+def mk_req_list_events(service, startDate, pageToken=""):
     return service.events().list(
         calendarId=CALENDAR_ID,
         maxResults=G_API_MAX_RESULTS,
-        timeMin=startDate.isoformat())
+        timeMin=startDate.isoformat(),
+        pageToken=pageToken)
 
 def list_events_raw(service, startDate):
     response = mk_req_list_events(service, startDate).execute()
-    return response.get('items', [])
+    items = response.get('items', [])
+    nextPageToken = response.get('nextPageToken', None)
+    while nextPageToken:
+        print(nextPageToken)
+        response = mk_req_list_events(service, startDate, nextPageToken).execute()
+        items.extend(response.get('items', []))
+        nextPageToken = response.get('nextPageToken', None)
+    return items
 
 def list_events(service, start_date):
     return [google_format_to_event(event) for event 
@@ -146,8 +154,10 @@ def delete_all(service):
     requests = list()
     events = list_events_raw(service, datetime.now(tzutc()))
     for event in events:
-        requests.append(mk_req_delete_event(service, event['id']))
-    send_multiple_requests(requests)
+        google_format_to_event(event).pretty_print()
+        #requests.append(mk_req_delete_event(service, event['id']))
+        mk_req_delete_event(service, event['id']).execute()
+    #send_multiple_requests(requests)
 
 def main():
     """Shows basic usage of the Google Calendar API.
@@ -157,12 +167,8 @@ def main():
     """
     logging.basicConfig(level="INFO")
     service = get_calendar_service()
+    events = list_events(service, datetime.now(tzutc()))
     delete_all(service)
-    events = susu.get_events_in_date_period(datetime.now(tzutc()), 60)
-    insert_event_list(service, events)
-    #events = list_events(service, datetime.now(tzutc()))
-    #for event in events:
-    #    event.pretty_print()
 
 if __name__ == '__main__':
     main()
