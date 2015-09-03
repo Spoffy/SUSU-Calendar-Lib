@@ -156,7 +156,6 @@ def delete_all(service):
     requests = list()
     events = list_events_raw(service, datetime.now(tzutc()))
     for event in events:
-        google_format_to_event(event).pretty_print()
         requests.append(mk_req_delete_event(service, event['id']))
     send_multiple_requests(requests)
 
