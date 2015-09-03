@@ -21,12 +21,19 @@ def datetime_to_request_format(value_to_convert):
 
 
 def request_cal_for_day(date):
-    logging.info("Retrieving calendar for %s", str(date))
     formatted_date = datetime_to_request_format(date)
     request_params = {"date": formatted_date, "list": "true", "week": "false"}
-    request = requests.get(CALENDAR_REQUEST_URL, request_params)
-    request.raise_for_status()
-    return request.text.encode('ascii', 'ignore')
+
+    #Make 3 (arbitrary number) attempts as the SUSU calendar sometimes
+    #gives a random 404...
+    for attempt in range(0, 3):
+        try:
+            logging.info("Retrieving calendar for {}, attempt {}".format(date, attempt))
+            request = requests.get(CALENDAR_REQUEST_URL, request_params)
+            request.raise_for_status()
+            return request.text.encode('ascii', 'ignore')
+        except requests.exceptions.HTTPError as e:
+            logging.warning("Unable to retrieve SUSU calendar for {} on attempt {:.0f}".format(date, attempt))
 
 
 def datetime_string_to_obj(dt_string):
@@ -69,7 +76,6 @@ def parse_event_list_from_html(html):
 
 def get_events_on_day(date):
     return parse_event_list_from_html(request_cal_for_day(date))
-
 
 def dateperiod(start_date, days):
     for day_number in range(days - 1):
