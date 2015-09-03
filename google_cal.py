@@ -103,7 +103,8 @@ def send_multiple_requests(requests):
             current_batch.execute()
             current_batch = BatchHttpRequest()
             current_batch_size = 0
-    current_batch.execute()
+    if current_batch_size:
+        current_batch.execute()
 
 
 def mk_req_insert_event(service, event):
