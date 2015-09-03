@@ -103,6 +103,7 @@ def send_multiple_requests(requests):
             current_batch.execute()
             current_batch = BatchHttpRequest()
             current_batch_size = 0
+    current_batch.execute()
 
 
 def mk_req_insert_event(service, event):
@@ -155,9 +156,8 @@ def delete_all(service):
     events = list_events_raw(service, datetime.now(tzutc()))
     for event in events:
         google_format_to_event(event).pretty_print()
-        #requests.append(mk_req_delete_event(service, event['id']))
-        mk_req_delete_event(service, event['id']).execute()
-    #send_multiple_requests(requests)
+        requests.append(mk_req_delete_event(service, event['id']))
+    send_multiple_requests(requests)
 
 def main():
     """Shows basic usage of the Google Calendar API.
